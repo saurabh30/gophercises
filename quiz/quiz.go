@@ -7,7 +7,7 @@ import (
 
 func main() {
 
-	tQ, cQ := test.TakeTest("input.csv")
+	tQ, cQ := test.TakeTest("test/input.csv")
 	// Open the file
 	fmt.Printf("Total Questions : %d, Correct Questions: %d \n", tQ, cQ)
 }
