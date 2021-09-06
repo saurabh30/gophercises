@@ -6,9 +6,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
+	"time"
 )
 
-func TakeTest(fileName string) (tQ, cQ int) {
+func TakeTest(fileName string, timeDuration int) (tQ, cQ int) {
 	csvfile, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -16,10 +18,23 @@ func TakeTest(fileName string) (tQ, cQ int) {
 
 	// Parse the file
 	r := csv.NewReader(csvfile)
-	//r := csv.NewReader(bufio.NewReader(csvfile))
-	// Iterate through the records
+
+	t := time.NewTimer(time.Duration(timeDuration) * time.Second)
+
+	answerChan := make(chan string)
+
+	var input string
+
+	// fmt.Println("Press enter to start.")
+	// fmt.Scanln(&input)
+
 	for {
 		// Read each record from csv
+		go func() {
+			fmt.Scanln(&input)
+			answerChan <- strings.TrimSpace(input)
+		}()
+
 		record, err := r.Read()
 		if err == io.EOF {
 			break
@@ -30,11 +45,18 @@ func TakeTest(fileName string) (tQ, cQ int) {
 		tQ++
 		ans := record[1]
 		fmt.Printf("Question: %s \n", record[0])
-		var input string
-		fmt.Scanln(&input)
-		if input == ans {
-			cQ++
+
+		select {
+		case <-t.C:
+			return
+
+		case answer := <-answerChan:
+
+			if strings.EqualFold(answer, ans) {
+				cQ++
+			}
 		}
+
 	}
 
 	return

@@ -18,11 +18,11 @@ func TestTakeTest(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	got1, _ := TakeTest(dir + "/problems.csv")
+	got1, _ := TakeTest(dir+"/problems.csv", 3)
 	want1 := 13
 
 	if got1 != want1 {
-		t.Errorf("got %q, wanted %q", got1, want1)
+		t.Errorf("got %d, wanted %d", got1, want1)
 	}
 
 }
