@@ -5,12 +5,18 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
 )
 
-func TakeTest(fileName string, timeDuration int) (tQ, cQ int) {
+type Problem struct {
+	Question string
+	Answer   string
+}
+
+func TakeTest(fileName string, timeDuration int, shuffle bool) (tQ, cQ int) {
 	csvfile, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -28,12 +34,10 @@ func TakeTest(fileName string, timeDuration int) (tQ, cQ int) {
 	// fmt.Println("Press enter to start.")
 	// fmt.Scanln(&input)
 
+	var problems []Problem
+
 	for {
 		// Read each record from csv
-		go func() {
-			fmt.Scanln(&input)
-			answerChan <- strings.TrimSpace(input)
-		}()
 
 		record, err := r.Read()
 		if err == io.EOF {
@@ -42,9 +46,25 @@ func TakeTest(fileName string, timeDuration int) (tQ, cQ int) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		tQ++
-		ans := record[1]
-		fmt.Printf("Question: %s \n", record[0])
+
+		p := Problem{record[0], record[1]}
+		problems = append(problems, p)
+
+	}
+
+	tQ = len(problems)
+	if shuffle {
+		shuffleProblems(problems)
+	}
+	for _, problem := range problems {
+
+		go func() {
+			fmt.Scanln(&input)
+			answerChan <- strings.TrimSpace(input)
+		}()
+
+		ans := problem.Answer
+		fmt.Printf("Question: %s \n", problem.Question)
 
 		select {
 		case <-t.C:
@@ -60,5 +80,15 @@ func TakeTest(fileName string, timeDuration int) (tQ, cQ int) {
 	}
 
 	return
+
+}
+
+func shuffleProblems(problems []Problem) {
+
+	rand.Seed(time.Now().Unix())
+
+	rand.Shuffle(len(problems), func(i, j int) {
+		problems[i], problems[j] = problems[j], problems[i]
+	})
 
 }
